@@ -6,6 +6,20 @@
 	objectVersion = 48;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		3E676F2E2050773F0067A36A /* Export */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 3E676F3D2050773F0067A36A /* Build configuration list for PBXAggregateTarget "Export" */;
+			buildPhases = (
+				3E452A4F2050775A00193D80 /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = Export;
+			productName = Agreggate;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		0D44BB0D1E5370ED000930E0 /* XMPP.h in Headers */ = {isa = PBXBuildFile; fileRef = 0D44BAF71E5370ED000930E0 /* XMPP.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D44BB0E1E5370ED000930E0 /* XMPPConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 0D44BAF81E5370ED000930E0 /* XMPPConstants.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -3691,6 +3705,10 @@
 						CreatedOnToolsVersion = 8.2.1;
 						ProvisioningStyle = Automatic;
 					};
+					3E676F2E2050773F0067A36A = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+					};
 					D9A7A9191FB97892005183CD = {
 						LastSwiftMigration = 0910;
 						ProvisioningStyle = Automatic;
@@ -3745,6 +3763,7 @@
 				D9A7A9191FB97892005183CD /* XMPPFrameworkSwift (iOS) */,
 				D9A7AD0C1FB97A3C005183CD /* XMPPFrameworkSwift (macOS) */,
 				D9A7AE581FB97A65005183CD /* XMPPFrameworkSwift (tvOS) */,
+				3E676F2E2050773F0067A36A /* Export */,
 			);
 		};
 /* End PBXProject section */
@@ -3985,6 +4004,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		3E452A4F2050775A00193D80 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/sh\nUNIVERSAL_OUTPUTFOLDER=${BUILD_DIR}/${CONFIGURATION}-universal\n# make sure the output directory exists\nmkdir -p \"${UNIVERSAL_OUTPUTFOLDER}\"\n\nARRAY_TARGETS=(\"XMPPFramework\" \"KissXML\" \"CocoaAsyncSocket\" \"CocoaLumberjack\" \"libidn\")\nARRAY_TARGETS_NAME=(\"XMPPFramework (iOS)\" \"KissXML (iOS)\" \"iOS CocoaAsyncSocket\" \"CocoaLumberjack-iOS\" \"libidn (iOS)\")\n\nfor i in {0..4}\ndo\n\nTHE_TARGET_NAME=\"${ARRAY_TARGETS_NAME[${i}]}\"\nTHE_TARGET=\"${ARRAY_TARGETS[${i}]}\"\n\n# Step 1. Build Device and Simulator versions\nxcodebuild ENABLE_BITCODE=NO IPHONEOS_DEPLOYMENT_TARGET=8.2 -target \"${THE_TARGET_NAME}\" ONLY_ACTIVE_ARCH=NO -configuration ${CONFIGURATION} -sdk iphoneos  BUILD_DIR=\"${BUILD_DIR}\" BUILD_ROOT=\"${BUILD_ROOT}\" clean build\nxcodebuild ENABLE_BITCODE=NO IPHONEOS_DEPLOYMENT_TARGET=8.2 -target \"${THE_TARGET_NAME}\" -configuration ${CONFIGURATION} -sdk iphonesimulator ONLY_ACTIVE_ARCH=NO -arch x86_64 -arch i386 -arch armv7 -arch armv7s -arch arm64 BUILD_DIR=\"${BUILD_DIR}\" BUILD_ROOT=\"${BUILD_ROOT}\" clean build\n# Step 2. Copy the framework structure (from iphoneos build) to the universal folder\ncp -R \"${BUILD_DIR}/${CONFIGURATION}-iphoneos/${THE_TARGET}.framework\" \"${UNIVERSAL_OUTPUTFOLDER}/\"\n# Step 3. Copy Swift modules from iphonesimulator build (if it exists) to the copied framework directory\nSIMULATOR_SWIFT_MODULES_DIR=\"${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${THE_TARGET}.framework/Modules/${THE_TARGET}.swiftmodule/.\"\nif [ -d \"${SIMULATOR_SWIFT_MODULES_DIR}\" ]; then\ncp -R \"${SIMULATOR_SWIFT_MODULES_DIR}\" \"${UNIVERSAL_OUTPUTFOLDER}/${THE_TARGET}.framework/Modules/${THE_TARGET}.swiftmodule\"\nfi\n# Step 4. Create universal binary file using lipo and place the combined executable in the copied framework directory\nlipo -create -output \"${UNIVERSAL_OUTPUTFOLDER}/${THE_TARGET}.framework/${THE_TARGET}\" \"${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${THE_TARGET}.framework/${THE_TARGET}\" \"${BUILD_DIR}/${CONFIGURATION}-iphoneos/${THE_TARGET}.framework/${THE_TARGET}\"\n# Step 5. Convenience step to copy the framework to the project's directory\ncp -R \"${UNIVERSAL_OUTPUTFOLDER}/${THE_TARGET}.framework\" \"${PROJECT_DIR}\"\n\n# Step 6. Convenience step to open the project's directory in Finder\ndone\n\nopen \"${PROJECT_DIR}\"";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0D44BAE51E537066000930E0 /* Sources */ = {
@@ -4807,6 +4842,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = Core/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -4831,6 +4867,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = Core/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -4841,6 +4878,22 @@
 				PRODUCT_NAME = "$(PROJECT_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
+			};
+			name = Release;
+		};
+		3E676F2F2050773F0067A36A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		3E676F302050773F0067A36A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -5129,6 +5182,15 @@
 			buildConfigurations = (
 				0D44BAF31E537066000930E0 /* Debug */,
 				0D44BAF41E537066000930E0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3E676F3D2050773F0067A36A /* Build configuration list for PBXAggregateTarget "Export" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3E676F2F2050773F0067A36A /* Debug */,
+				3E676F302050773F0067A36A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
